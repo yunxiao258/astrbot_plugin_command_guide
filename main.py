@@ -19,7 +19,7 @@ from astrbot.core.star.command_management import list_commands
 PLUGIN_NAME = "astrbot_plugin_command_guide"
 PLUGIN_AUTHOR = "云晓"
 PLUGIN_DESC = "指令大全：一键查询所有插件的指令、别名、权限与说明"
-PLUGIN_VERSION = "1.0.0"
+PLUGIN_VERSION = "1.0.1"
 
 _CMD_NAME = "指令"
 DEFAULT_PAGE_CHARS = 2000  # 每页最大字符数（QQ 等平台单条消息长度安全值）
@@ -217,14 +217,29 @@ class CommandGuidePlugin(Star):
         except (TypeError, ValueError):
             return DEFAULT_PAGE_CHARS
 
+    def _cfg_bool(self, key: str, default: bool) -> bool:
+        val = self.config.get(key, default)
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            s = val.strip().lower()
+            if s in ("1", "true", "yes", "on", "是"):
+                return True
+            if s in ("0", "false", "no", "off", "否", ""):
+                return False
+            return default
+        if isinstance(val, (int, float)):
+            return bool(val)
+        return default
+
     def _include_reserved(self) -> bool:
-        return bool(self.config.get("include_reserved", True))
+        return self._cfg_bool("include_reserved", True)
 
     def _show_disabled(self) -> bool:
-        return bool(self.config.get("show_disabled", True))
+        return self._cfg_bool("show_disabled", True)
 
     def _admin_only(self) -> bool:
-        return bool(self.config.get("admin_only", False))
+        return self._cfg_bool("admin_only", False)
 
     def _admin_umos(self) -> list[str]:
         v = self.config.get("admin_umos", "")
@@ -269,8 +284,17 @@ class CommandGuidePlugin(Star):
         if self._admin_only() and not self._is_admin(event):
             return self._reply(event, self._deny())
 
-        raw_text = event.message_str.strip().lstrip("/")
+        raw_text = re.sub(r"^[\\/／]+", "", event.message_str.strip())
         rest = raw_text[len(_CMD_NAME):].strip()
+        if rest in ("--help", "-h"):
+            return self._reply(
+                event,
+                f"📖 指令大全 v{PLUGIN_VERSION} 用法：\n"
+                "- /指令：查看全部已加载插件指令（自动分页）\n"
+                "- /指令 <页码>：跳转到指定页码\n"
+                "- /指令 <关键词> [页码]：按插件名/指令名/别名/描述检索\n"
+                "- /指令 --help：查看本用法提示",
+            )
         keyword, page = parse_guide_args(rest)
 
         raw = await self._fetch_commands()
