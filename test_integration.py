@@ -302,7 +302,7 @@ def test_plugin_metadata():
     print("[插件元数据]")
     from astrbot_plugin_command_guide import main as m
     check("插件注册名", m.PLUGIN_NAME == PLUGIN_NAME)
-    check("版本号", m.PLUGIN_VERSION == "1.0.1")
+    check("版本号", m.PLUGIN_VERSION == "1.1.0")
 
 
 def test_v101_bool_cfg_and_help():
@@ -310,7 +310,7 @@ def test_v101_bool_cfg_and_help():
     plugin = make_plugin({"admin_only": "false", "show_disabled": "0", "include_reserved": "false"})
     check("字符串 false 正确解析", not plugin._admin_only() and not plugin._show_disabled() and not plugin._include_reserved())
     t_help = run_cmd(plugin, "／指令 --help")
-    check("--help 用法输出", "/指令 <关键词>" in t_help and "v1.0.1" in t_help)
+    check("--help 用法输出", "/指令 <关键词>" in t_help and "v1.1.0" in t_help)
 
 
 if __name__ == "__main__":

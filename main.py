@@ -19,7 +19,12 @@ from astrbot.core.star.command_management import list_commands
 PLUGIN_NAME = "astrbot_plugin_command_guide"
 PLUGIN_AUTHOR = "云晓"
 PLUGIN_DESC = "指令大全：一键查询所有插件的指令、别名、权限与说明"
-PLUGIN_VERSION = "1.0.1"
+try:
+    from .hub_bridge import HUB_PROTOCOL_VERSION, emit_hub_event
+except ImportError:
+    from hub_bridge import HUB_PROTOCOL_VERSION, emit_hub_event
+
+PLUGIN_VERSION = "1.1.0"
 
 _CMD_NAME = "指令"
 DEFAULT_PAGE_CHARS = 2000  # 每页最大字符数（QQ 等平台单条消息长度安全值）
@@ -203,6 +208,7 @@ def count_commands(groups: list[dict[str, Any]]) -> int:
 
 @register(PLUGIN_NAME, PLUGIN_AUTHOR, PLUGIN_DESC, PLUGIN_VERSION)
 class CommandGuidePlugin(Star):
+    HUB_PROTOCOL_VERSION = HUB_PROTOCOL_VERSION
     """指令大全：查询所有已加载插件的指令、别名、权限与说明"""
 
     def __init__(self, context: Context, config: AstrBotConfig = None):
@@ -352,3 +358,17 @@ class CommandGuidePlugin(Star):
                 tips,
             ]
         )
+
+    def hub_status(self) -> dict:
+        return {
+            "version": PLUGIN_VERSION,
+            "status": "online",
+            "metrics": {"分页字数": self._page_chars(), "仅管理员": "是" if self._admin_only() else "否"},
+            "actions": ["list_all_commands"],
+        }
+
+    async def hub_action(self, action: str, params: dict | None = None) -> dict:
+        if action == "list_all_commands":
+            cmds = await self._fetch_commands()
+            return {"ok": True, "data": {"count": len(cmds), "commands": cmds[:100]}}
+        return {"ok": False, "error": f"不支持的动作：{action}"}

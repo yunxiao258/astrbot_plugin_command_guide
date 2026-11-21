@@ -2,6 +2,6 @@ name: astrbot_plugin_command_guide
 display_name: 指令大全
 desc: 一键查询所有已加载插件的指令、别名、权限与说明，支持关键字搜索与自动分页
 help: 发送「/指令」查看全部指令（自动分页）；「/指令 <页码>」翻页；「/指令 <关键词>」搜索；「/指令 <关键词> <页码>」搜索后翻页；「/指令 --help」查看用法
-version: 1.0.1
+version: 1.1.0
 author: 云晓
 repo: https://github.com/yunxiao258/astrbot_plugin_command_guide
